@@ -3,7 +3,22 @@ package service_test
 import (
 	"github.com/yoskeoka/go-example/mock/domain"
 	"github.com/yoskeoka/go-example/mock/domain/model"
+	"github.com/yoskeoka/go-example/mock/registry"
 )
+
+type serviceRegistryMock struct {
+	registry.ServiceRegistryInterface
+	userRepoMock
+	userGrpRepoMock
+}
+
+func (sr *serviceRegistryMock) User() domain.User {
+	return &sr.userRepoMock
+}
+
+func (sr *serviceRegistryMock) UserGroup() domain.UserGroup {
+	return &sr.userGrpRepoMock
+}
 
 type userRepoMock struct {
 	domain.User

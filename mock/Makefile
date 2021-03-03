@@ -5,3 +5,4 @@ install-tools:
 
 mock:
 	@mockgen --build_flags=--mod=mod -package service_test github.com/yoskeoka/go-example/mock/domain User,UserGroup > service/mockgen_user_test.go
+	@mockgen --build_flags=--mod=mod -package service_test github.com/yoskeoka/go-example/mock/registry ServiceRegistryInterface > service/mockgen_registry_test.go

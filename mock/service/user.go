@@ -6,6 +6,7 @@ import (
 
 	"github.com/yoskeoka/go-example/mock/domain"
 	"github.com/yoskeoka/go-example/mock/domain/model"
+	"github.com/yoskeoka/go-example/mock/registry"
 )
 
 // User manages user's personal information.
@@ -16,12 +17,11 @@ type User struct {
 
 // NewUser initializes User service.
 func NewUser(
-	userRepo domain.User,
-	grpRepo domain.UserGroup,
+	r registry.ServiceRegistryInterface,
 ) *User {
 	return &User{
-		userRepo: userRepo,
-		grpRepo:  grpRepo,
+		userRepo: r.User(),
+		grpRepo:  r.UserGroup(),
 	}
 }
 

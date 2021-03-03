@@ -5,27 +5,26 @@ import (
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
+	"github.com/yoskeoka/go-example/mock/domain"
 	"github.com/yoskeoka/go-example/mock/domain/model"
 	"github.com/yoskeoka/go-example/mock/service"
 )
 
 func TestUser_Create_1(t *testing.T) {
 
-	userRepo := &userRepoMock{
-		FakeCreate: func(user *model.User) (*model.User, error) {
-			created := &model.User{ID: 7, Name: user.Name, Address: user.Address}
-			return created, nil
-		},
-	}
-	userGrpRepo := &userGrpRepoMock{
-		FakeCreate: func(grp *model.UserGroup) (*model.UserGroup, error) {
-			created := &model.UserGroup{ID: 9, Name: grp.Name, Private: grp.Private}
-			return created, nil
-		},
-		FakeAddUser: func(grpID int, userID int) error { return nil },
+	r := &serviceRegistryMock{}
+	r.userRepoMock.FakeCreate = func(user *model.User) (*model.User, error) {
+		created := &model.User{ID: 7, Name: user.Name, Address: user.Address}
+		return created, nil
 	}
 
-	userSvc := service.NewUser(userRepo, userGrpRepo)
+	r.userGrpRepoMock.FakeCreate = func(grp *model.UserGroup) (*model.UserGroup, error) {
+		created := &model.UserGroup{ID: 9, Name: grp.Name, Private: grp.Private}
+		return created, nil
+	}
+	r.userGrpRepoMock.FakeAddUser = func(grpID int, userID int) error { return nil }
+
+	userSvc := service.NewUser(r)
 
 	userInput := model.User{Name: "John", Address: "Kyoto"}
 	got, err := userSvc.Create(&userInput)
@@ -106,12 +105,11 @@ func TestUser_Create_TableDrivenTests(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			userRepo := &userRepoMock{}
-			userRepo.FakeCreate = tt.userFakes.Create
-			userGrpRepo := &userGrpRepoMock{}
-			userGrpRepo.FakeCreate = tt.userGrpFakes.Create
-			userGrpRepo.FakeAddUser = tt.userGrpFakes.AddUser
-			u := service.NewUser(userRepo, userGrpRepo)
+			r := &serviceRegistryMock{}
+			r.userRepoMock.FakeCreate = tt.userFakes.Create
+			r.userGrpRepoMock.FakeCreate = tt.userGrpFakes.Create
+			r.userGrpRepoMock.FakeAddUser = tt.userGrpFakes.AddUser
+			u := service.NewUser(r)
 			got, err := u.Create(tt.args.user)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("User.Create() error = %v, wantErr %v", err, tt.wantErr)
@@ -152,7 +150,18 @@ func TestUser_Create_2_mockgen(t *testing.T) {
 		}).
 		AnyTimes()
 
-	userSvc := service.NewUser(userRepo, userGrpRepo)
+	r := NewMockServiceRegistryInterface(ctrl)
+	r.EXPECT().
+		User().
+		DoAndReturn(func() domain.User { return userRepo }).
+		AnyTimes()
+
+	r.EXPECT().
+		UserGroup().
+		DoAndReturn(func() domain.UserGroup { return userGrpRepo }).
+		AnyTimes()
+
+	userSvc := service.NewUser(r)
 
 	userInput := model.User{Name: "John", Address: "Kyoto"}
 	got, err := userSvc.Create(&userInput)
