@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	gomock "github.com/golang/mock/gomock"
 	"github.com/yoskeoka/go-example/mock/domain/model"
 	"github.com/yoskeoka/go-example/mock/service"
 )
@@ -121,4 +122,51 @@ func TestUser_Create_TableDrivenTests(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUser_Create_2_mockgen(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+
+	userRepo := NewMockUser(ctrl)
+	userGrpRepo := NewMockUserGroup(ctrl)
+
+	userRepo.EXPECT().
+		Create(gomock.Any()).
+		DoAndReturn(func(user *model.User) (*model.User, error) {
+			return &model.User{ID: 7, Name: user.Name, Address: user.Address}, nil
+		}).
+		AnyTimes()
+
+	userGrpRepo.EXPECT().
+		Create(gomock.Any()).
+		DoAndReturn(func(grp *model.UserGroup) (*model.UserGroup, error) {
+			return grp, nil
+		}).
+		AnyTimes()
+
+	userGrpRepo.EXPECT().
+		AddUser(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(grpID int, userID int) error {
+			return nil
+		}).
+		AnyTimes()
+
+	userSvc := service.NewUser(userRepo, userGrpRepo)
+
+	userInput := model.User{Name: "John", Address: "Kyoto"}
+	got, err := userSvc.Create(&userInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got.ID != 7 {
+		t.Errorf("User.Create() should return model.User.ID = 7, but got = %d", got.ID)
+	}
+
+	if got.Name != userInput.Name {
+		t.Errorf("User.Create() should return model.User.Name = %s, but got = %s", userInput.Name, got.Name)
+	}
+
+	// snip...
 }
