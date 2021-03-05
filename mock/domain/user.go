@@ -12,7 +12,7 @@ type User interface {
 
 // UserGroup represents CRUD operation to UserGroup model.
 type UserGroup interface {
-	Read(grpID int) (*model.User, error)
+	Read(grpID int) (*model.UserGroup, error)
 	Create(grp *model.UserGroup) (*model.UserGroup, error)
 	Update(grp *model.UserGroup) error
 	Delete(grpID int) error
