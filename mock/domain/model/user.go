@@ -1,6 +1,6 @@
 package model
 
-// User has user's parsonal information.
+// User has user's personal information.
 type User struct {
 	ID      int
 	Name    string
